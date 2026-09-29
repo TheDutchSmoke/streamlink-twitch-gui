@@ -45,7 +45,11 @@ module( "init/initializers/keyboard-layout-map", function( hooks ) {
 		await Promise.resolve();
 
 		assert.ok( keyboardLayoutMap instanceof Map, "Registers the keyboard layout map" );
-		assert.strictEqual( keyboardLayoutMap.get( "KeyA" ), "a", "Populates the map asynchronously" );
+		assert.strictEqual(
+			keyboardLayoutMap.get( "KeyA" ),
+			"a",
+			"Populates the map asynchronously"
+		);
 	});
 
 	test( "Initializer - failure", async function( assert ) {
