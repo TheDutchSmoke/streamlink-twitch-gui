@@ -104,7 +104,7 @@ grunt build:prod compile
 
 The final build can be found in the `build/releases` directory.
 
-Both the `release` and `compile` tasks support multiple *targets* for different platforms. Targets can be set by appending `:target` to the task name (eg. `grunt release:linux64:osx64`). See `build/tasks/common/platforms.js` for all available targets. By default, the currently used platform will be selected. Compiling a `win32` or `win64` build on Linux or macOS requires `wine` to be installed on the system.
+Both the `release` and `compile` tasks support multiple *targets* for different platforms. Targets can be set by appending `:target` to the task name (eg. `grunt release:linux64:osx64:osxarm64`). See `build/tasks/common/platforms.js` for all available targets. By default, the currently used platform will be selected. Compiling a `win32` or `win64` build on Linux or macOS requires `wine` to be installed on the system.
 
 #### Archives, installers and packages
 

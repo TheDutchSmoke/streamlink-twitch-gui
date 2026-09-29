@@ -46,6 +46,7 @@ module.exports = {
 	release_win32: [ "<%= dir.releases %>/<%= package.name %>/win32/**" ],
 	release_win64: [ "<%= dir.releases %>/<%= package.name %>/win64/**" ],
 	release_osx64: [ "<%= dir.releases %>/<%= package.name %>/osx64/**" ],
+	release_osxarm64: [ "<%= dir.releases %>/<%= package.name %>/osxarm64/**" ],
 	release_linux32: [ "<%= dir.releases %>/<%= package.name %>/linux32/**" ],
 	release_linux64: [ "<%= dir.releases %>/<%= package.name %>/linux64/**" ],
 

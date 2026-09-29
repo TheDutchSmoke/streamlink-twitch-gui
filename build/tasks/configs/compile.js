@@ -22,6 +22,15 @@ module.exports = {
 				"shell:permissions_osx64"
 			]
 		},
+		osxarm64: {
+			before: [
+				"clean:release_osxarm64"
+			],
+			after: [
+				"shell:packagejson_osxarm64",
+				"shell:permissions_osxarm64"
+			]
+		},
 
 		linux32: {
 			before: [

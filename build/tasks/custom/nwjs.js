@@ -1,5 +1,45 @@
 module.exports = function( grunt ) {
-	const NwBuilder = require( "nw-builder" );
+	const LegacyNwBuilder = require( "nw-builder" );
+	const { rm } = require( "fs/promises" );
+	const { resolve: r } = require( "path" );
+
+	async function buildModern( options ) {
+		const { default: nwbuild } = await import( "nw-builder-modern" );
+		const {
+			version,
+			flavor,
+			cacheDir,
+			platform,
+			arch,
+			srcDir,
+			outDir,
+			glob,
+			zip,
+			app,
+			excludeAppPaths = []
+		} = options;
+
+		await nwbuild({
+			mode: "build",
+			version,
+			flavor,
+			cacheDir,
+			platform,
+			arch,
+			srcDir,
+			outDir,
+			glob,
+			zip,
+			app
+		});
+
+		const appRoot = r( outDir, `${app.name}.app`, "Contents", "Resources", "app.nw" );
+		await Promise.all(
+			excludeAppPaths.map( relativePath =>
+				rm( r( appRoot, relativePath ), { recursive: true, force: true } )
+			)
+		);
+	}
 
 	function taskNwjs() {
 		const done = this.async();
@@ -9,7 +49,16 @@ module.exports = function( grunt ) {
 			options.flavor = "sdk";
 		}
 
-		const nw = new NwBuilder( options );
+		if ( options.builder === "modern" ) {
+			buildModern( options )
+				.then( () => {
+					grunt.log.ok( "NW.js application created." );
+					done();
+				}, grunt.fail.fatal );
+			return;
+		}
+
+		const nw = new LegacyNwBuilder( options );
 
 		nw.on( "log", grunt.log.debug );
 		nw.on( "stdout", grunt.log.debug );

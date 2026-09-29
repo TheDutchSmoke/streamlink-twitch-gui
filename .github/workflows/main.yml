@@ -17,6 +17,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-15
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
@@ -57,6 +58,21 @@ jobs:
         run: yarn run grunt webpack:i18n
       - name: Build
         run: yarn run grunt clean:tmp_prod webpack:prod
+      - name: Compile macOS arm64
+        if: startsWith(matrix.os, 'macos')
+        run: yarn run grunt compile:osxarm64
+      - name: Verify native macOS arm64 binaries
+        if: startsWith(matrix.os, 'macos')
+        shell: bash
+        run: |
+          app="build/releases/streamlink-twitch-gui/osxarm64/streamlink-twitch-gui.app"
+          find "$app" -type f -exec file {} \; | grep 'Mach-O' | tee /tmp/macho.txt
+          test -s /tmp/macho.txt
+          if grep -E 'x86_64|i386' /tmp/macho.txt; then
+            echo "Found non-arm64 Mach-O binaries"
+            exit 1
+          fi
+          grep -q 'arm64' /tmp/macho.txt
       - name: Upload coverage data
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:

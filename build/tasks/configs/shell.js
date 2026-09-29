@@ -5,6 +5,12 @@ module.exports = {
 			"find . -type f -print0 | xargs -0 chmod -R g=u,o=u,g-w,o-w"
 		].join( " && " )
 	},
+	permissions_osxarm64: {
+		command: [
+			"cd '<%= dir.releases %>/<%= package.name %>/osxarm64'",
+			"find . -type f -print0 | xargs -0 chmod -R g=u,o=u,g-w,o-w"
+		].join( " && " )
+	},
 	permissions_linux32: {
 		command: [
 			"cd '<%= dir.releases %>/<%= package.name %>/linux32'",
@@ -25,6 +31,18 @@ module.exports = {
 			"<%= dir.releases %>",
 			"<%= package.name %>",
 			"osx64",
+			"<%= package.name %>.app",
+			"Contents",
+			"Resources",
+			"app.nw"
+		].join( "/" ),
+		command: "str=\"$(jq 'del(.product_string)' package.json)\" && echo \"$str\" > package.json"
+	},
+	packagejson_osxarm64: {
+		cwd: [
+			"<%= dir.releases %>",
+			"<%= package.name %>",
+			"osxarm64",
 			"<%= package.name %>.app",
 			"Contents",
 			"Resources",
@@ -55,6 +73,14 @@ module.exports = {
 			"'<%= compress.osx64.input %>'",
 			"'<%= compress.osx64.output %>'",
 			"'<%= compress.osx64.prefix %>'"
+		].join( " " )
+	},
+	archive_osxarm64: {
+		command: [
+			"bash '<%= dir.resources %>/archive/tar-gzip.sh'",
+			"'<%= compress.osxarm64.input %>'",
+			"'<%= compress.osxarm64.output %>'",
+			"'<%= compress.osxarm64.prefix %>'"
 		].join( " " )
 	},
 	archive_linux32: {

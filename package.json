@@ -81,6 +81,7 @@
 		"mini-css-extract-plugin": "2.7.3",
 		"node-fetch": "3.0.0-beta.9",
 		"nw-builder": "github:bastimeyer/nw-builder#91ad892b2c2b22c56dcc7570b97471ecff7c8cdb",
+		"nw-builder-modern": "npm:nw-builder@4.20.0",
 		"qunit": "2.17.2",
 		"sinon": "18.0.1",
 		"svgo": "4.1.0",
