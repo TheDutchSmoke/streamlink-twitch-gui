@@ -51,8 +51,7 @@ jobs:
         run: |
           yarn install --no-progress --non-interactive
           echo "LOCKFILE_BEGIN"
-          base64 -w0 yarn.lock
-          echo
+          cat yarn.lock
           echo "LOCKFILE_END"
       - name: Test
         shell: bash
