@@ -35,14 +35,21 @@ module( "init/initializers/keyboard-layout-map", function( hooks ) {
 
 
 	test( "Initializer - success", async function( assert ) {
-		class Subject extends Map {}
-		this.getLayoutMapStub.callsFake( async () => new Subject() );
+		this.getLayoutMapStub.resolves( new Map([[ "KeyA", "a" ]]) );
 
 		await setupContext( this );
 		await setupApplicationContext( this );
 
 		const keyboardLayoutMap = this.owner.lookup( "keyboardlayoutmap:main" );
-		assert.ok( keyboardLayoutMap instanceof Subject, "Registers the keyboard layout map" );
+		await Promise.resolve();
+		await Promise.resolve();
+
+		assert.ok( keyboardLayoutMap instanceof Map, "Registers the keyboard layout map" );
+		assert.strictEqual(
+			keyboardLayoutMap.get( "KeyA" ),
+			"a",
+			"Populates the map asynchronously"
+		);
 	});
 
 	test( "Initializer - failure", async function( assert ) {
