@@ -45,6 +45,15 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: yarn install --pure-lockfile --no-progress --non-interactive
+      - name: Generate lockfile snapshot
+        if: startsWith(matrix.os, 'ubuntu')
+        shell: bash
+        run: |
+          yarn install --no-progress --non-interactive
+          echo "LOCKFILE_BEGIN"
+          base64 -w0 yarn.lock
+          echo
+          echo "LOCKFILE_END"
       - name: Test
         shell: bash
         run: |
