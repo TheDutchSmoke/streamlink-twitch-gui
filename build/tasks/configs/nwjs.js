@@ -53,6 +53,34 @@ module.exports = {
 			]
 		}
 	},
+	osxarm64: {
+		options: {
+			builder : "modern",
+			platform: "osx",
+			arch    : "arm64",
+			version : "0.83.0",
+			srcDir  : "<%= dir.tmp_prod %>",
+			outDir  : "<%= dir.releases %>/<%= package.name %>/osxarm64",
+			glob    : false,
+			excludeAppPaths: [
+				"bin/win32",
+				"bin/win64"
+			],
+			app   : {
+				name                       : "<%= package.name %>",
+				icon                       : "<%= dir.resources %>/icons/icon-1024.icns",
+				LSApplicationCategoryType  : "public.app-category.entertainment",
+				CFBundleIdentifier         : "<%= main['app-identifier'] %>",
+				CFBundleName               : "<%= main['display-name'] %>",
+				CFBundleDisplayName        : "<%= main['display-name'] %>",
+				CFBundleSpokenName         : "<%= main['display-name'] %>",
+				CFBundleVersion            : "<%= package.version %>",
+				CFBundleShortVersionString : "<%= package.version %>",
+				NSHumanReadableCopyright   : "Copyright (c) <%= package.author %>",
+				LSFileQuarantineEnabled    : false
+			}
+		}
+	},
 
 	linux32: {
 		options: {

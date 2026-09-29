@@ -17,6 +17,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-15
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
@@ -57,6 +58,61 @@ jobs:
         run: yarn run grunt webpack:i18n
       - name: Build
         run: yarn run grunt clean:tmp_prod webpack:prod
+      - name: Compile macOS arm64
+        if: startsWith(matrix.os, 'macos')
+        run: yarn run grunt compile:osxarm64
+      - name: Verify native macOS arm64 binaries
+        if: startsWith(matrix.os, 'macos')
+        shell: bash
+        run: |
+          app="build/releases/streamlink-twitch-gui/osxarm64/streamlink-twitch-gui.app"
+          find "$app" -type f -exec file {} \; | grep 'Mach-O' | tee /tmp/macho.txt
+          test -s /tmp/macho.txt
+          if grep -E 'x86_64|i386' /tmp/macho.txt; then
+            echo "Found non-arm64 Mach-O binaries"
+            exit 1
+          fi
+          grep -q 'arm64' /tmp/macho.txt
+      - name: Verify macOS arm64 code signing
+        if: startsWith(matrix.os, 'macos')
+        shell: bash
+        run: |
+          app="build/releases/streamlink-twitch-gui/osxarm64/streamlink-twitch-gui.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -d --entitlements :- "$app" 2>/dev/null | grep -q '<key>com.apple.security.cs.allow-jit</key>'
+          while IFS= read -r helper; do
+            codesign -d --entitlements :- "$helper" 2>/dev/null | grep -q '<key>com.apple.security.cs.allow-jit</key>'
+          done < <(find "$app/Contents/Frameworks" -type d -name '*.app' -print)
+      - name: Smoke-test macOS arm64 app
+        if: startsWith(matrix.os, 'macos')
+        shell: bash
+        run: |
+          app="build/releases/streamlink-twitch-gui/osxarm64/streamlink-twitch-gui.app"
+          executable="$app/Contents/MacOS/streamlink-twitch-gui"
+          log="$RUNNER_TEMP/streamlink-twitch-gui-arm64.log"
+          profile="$RUNNER_TEMP/streamlink-twitch-gui-arm64-profile"
+          "$executable" --enable-logging=stderr --user-data-dir="$profile" >"$log" 2>&1 &
+          pid=$!
+          cleanup() {
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for _ in {1..10}; do
+            sleep 1
+            if ! kill -0 "$pid" 2>/dev/null; then
+              cat "$log"
+              echo "macOS arm64 application exited during startup"
+              exit 1
+            fi
+          done
+
+          if grep -E 'GPU process launch failed|GPU process isn.t usable|FATAL:' "$log"; then
+            cat "$log"
+            echo "macOS arm64 application reported a fatal startup error"
+            exit 1
+          fi
       - name: Upload coverage data
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
@@ -90,8 +146,57 @@ jobs:
       - name: Build
         run: yarn run grunt clean:tmp_prod webpack:prod
       - name: Compile & package
-        run: yarn run grunt clean:dist dist:all
+        run: |
+          yarn run grunt clean:dist \
+            dist:archive_win32:archive_win64:archive_osx64:archive_linux32:archive_linux64:installer_win32:installer_win64:appimage_linux32:appimage_linux64
       - name: Deploy
         env:
           RELEASES_API_KEY: ${{ secrets.GITHUB_TOKEN }}
         run: yarn run grunt deploy:github
+
+  release_macos_arm64:
+    name: New release (macOS arm64)
+    if: github.repository == 'streamlink/streamlink-twitch-gui' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - release
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: |
+          yarn install --pure-lockfile --no-progress --non-interactive
+          brew install gnu-tar pigz
+      - name: Prepare env vars
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "${GITHUB_REF}")" >> $GITHUB_ENV
+          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> $GITHUB_PATH
+      - name: Build
+        run: yarn run grunt clean:tmp_prod webpack:prod
+      - name: Compile & package macOS arm64
+        run: yarn run grunt clean:dist dist:archive_osxarm64
+      - name: Upload macOS arm64 release asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          artifact=(dist/*-macOS-arm64.tar.gz)
+          test -f "${artifact[0]}"
+
+          rm -f dist/*-checksums.txt
+          gh release download "$GITHUB_REF_NAME" --pattern '*-checksums.txt' --dir dist
+
+          checksum_file=(dist/*-checksums.txt)
+          test -f "${checksum_file[0]}"
+
+          checksum="$(shasum -a 256 "${artifact[0]}" | awk '{print $1}')"
+          printf '%s  %s\n' "$checksum" "$(basename "${artifact[0]}")" >> "${checksum_file[0]}"
+          LC_ALL=C sort -k2,2 -o "${checksum_file[0]}" "${checksum_file[0]}"
+
+          gh release upload "$GITHUB_REF_NAME" "${artifact[0]}" "${checksum_file[0]}" --clobber

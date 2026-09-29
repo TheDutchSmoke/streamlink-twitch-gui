@@ -1,7 +1,7 @@
 module.exports = {
 	options: Object.assign( {}, require( "./nwjs" ).options, {
 		flavor: "sdk",
-		argv: "--remote-debugging-port=8888"
+		argv: [ "--remote-debugging-port=8888" ]
 	}),
 
 	dev: {

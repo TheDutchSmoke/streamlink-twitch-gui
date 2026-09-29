@@ -13,6 +13,10 @@ module.exports = {
 			platform: "darwin",
 			arch    : "x64"
 		},
+		osxarm64: {
+			platform: "darwin",
+			arch    : "arm64"
+		},
 
 		linux32: {
 			platform: "linux",
