@@ -67,13 +67,17 @@ module.exports = {
 				"bin/win64"
 			],
 			app   : {
-				name                    : "<%= package.name %>",
-				icon                    : "<%= dir.resources %>/icons/icon-1024.icns",
-				CFBundleIdentifier      : "<%= main['app-identifier'] %>",
-				CFBundleName            : "<%= main['display-name'] %>",
-				CFBundleDisplayName     : "<%= main['display-name'] %>",
-				CFBundleSpokenName      : "<%= main['display-name'] %>",
-				LSFileQuarantineEnabled : false
+				name                       : "<%= package.name %>",
+				icon                       : "<%= dir.resources %>/icons/icon-1024.icns",
+				LSApplicationCategoryType  : "public.app-category.entertainment",
+				CFBundleIdentifier         : "<%= main['app-identifier'] %>",
+				CFBundleName               : "<%= main['display-name'] %>",
+				CFBundleDisplayName        : "<%= main['display-name'] %>",
+				CFBundleSpokenName         : "<%= main['display-name'] %>",
+				CFBundleVersion            : "<%= package.version %>",
+				CFBundleShortVersionString : "<%= package.version %>",
+				NSHumanReadableCopyright   : "Copyright (c) <%= package.author %>",
+				LSFileQuarantineEnabled    : false
 			}
 		}
 	},
