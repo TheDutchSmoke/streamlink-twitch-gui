@@ -10,7 +10,7 @@
  *
  * modified by Sebastian Meyer
  */
-import { isLinux } from "utils/node/platform";
+import { isDarwin, isLinux } from "utils/node/platform";
 
 
 const options = {
@@ -173,6 +173,21 @@ function scrollArray( elem, left, top ) {
 function onMousewheel( event ) {
 	if ( event.defaultPrevented ) {
 		return;
+	}
+
+	// Preserve native macOS trackpad and Magic Mouse scrolling. These devices
+	// emit high-resolution wheel deltas with their own momentum, and applying
+	// the legacy 400ms smoothing queue on top makes scrolling laggy and floaty.
+	// Keep the custom smoother for coarse mouse-wheel steps.
+	if ( isDarwin ) {
+		const deltas = [
+			event.wheelDeltaX || 0,
+			event.wheelDeltaY || event.wheelDelta || 0
+		].filter( Boolean );
+
+		if ( deltas.some( delta => Math.abs( delta ) < 120 || delta % 120 !== 0 ) ) {
+			return true;
+		}
 	}
 
 	const target = event.target;
